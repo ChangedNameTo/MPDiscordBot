@@ -112,6 +112,8 @@ async def punt(ctx):
         "I didn’t want to show up my mate",
         "I don’t climb well on Wednesdays",
         "I drank too much last night",
+        "I have too high bone density",
+        "I have too low bone density",
         "I got grit rash",
         "I grabbed the wrong pocket",
         "I just slipped",
