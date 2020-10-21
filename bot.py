@@ -3,11 +3,11 @@ import json
 import random
 import requests
 import sys, traceback
+import os
 
 from datetime import timedelta, datetime
 from discord.ext import commands
 
-from secrets import token, mp_key
 from excuses import excuses
 
 from search_for_route import search_for_routes
@@ -15,6 +15,9 @@ from search_for_route import search_for_routes
 description = 'A bot for use in the Climbing discord'
 bot = commands.Bot(command_prefix='?', description=description)
 bot_name = 'MP Discord Bot#9416'
+
+mp_key = os.environ['mp_key']
+token = os.environ['token']
 
 embed_dict = {}
 ALLOWED_SYSTEMS = ['Hueco', 'Fontainebleau', 'YDS', 'British', 'French']
