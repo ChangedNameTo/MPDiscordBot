@@ -4,20 +4,20 @@ import random
 import requests
 import sys, traceback
 
-
+from datetime import timedelta, datetime
 from discord.ext import commands
 
 from secrets import token, mp_key
 from excuses import excuses
 
 from search_for_route import search_for_routes
-from build_route_embed import create_route_embed, create_selection_embed
 
 description = 'A bot for use in the Climbing discord'
 bot = commands.Bot(command_prefix='?', description=description)
 bot_name = 'MP Discord Bot#9416'
 
 embed_dict = {}
+ALLOWED_SYSTEMS = ['Hueco', 'Fontainebleau', 'YDS', 'British', 'French']
 
 @bot.event
 async def on_ready():
@@ -54,12 +54,15 @@ async def route(ctx, route_name):
         thumbnail = mp_api_data['imgMedium']
         area = ' -> '.join(mp_api_data['location'])
         route_url = mp_api_data['url']
+        pitches = mp_api_data['pitches']
 
+        # Pulls the grade info
         grade_string = '|'
         grades = route['Grades']['Grade']
         if type(grades) is list:
             for grade in grades:
-                grade_string += ' `{}` |'.format(grade['Value'])
+                if grade['System'] in ALLOWED_SYSTEMS:
+                    grade_string += ' `{}` |'.format(grade['Value'])
         else:
             grade_string = '| `{}`| '.format(grades['Value'])
         
@@ -86,44 +89,51 @@ async def route(ctx, route_name):
         # Removes the hourglass
         await ctx.message.clear_reactions()
 
-        embed = discord.Embed(title=title, color=color, url=mp_api_data['url'])
+        embed = discord.Embed(title=title, color=color, url=mp_api_data['url'], timestamp=datetime.now().replace(microsecond=0))
 
         embed.add_field(name='Area', value=area, inline=False)
         embed.add_field(name='Grade', value=grade_string, inline=False)
         embed.add_field(name='Type', value=route_type_text, inline=False)
+        if(pitches):
+            embed.add_field(name='Pitches', value=pitches, inline=False)
         embed.add_field(name='Rating', value='{}/5'.format(rating), inline=False)
         embed.set_author(name=ctx.author)
         embed.set_thumbnail(url=thumbnail)
-        embed.set_footer(text='Type `?route <name>` to search for routes')
+        embed.set_footer(text='Type `?route "<name>"` to search for routes')
 
         await ctx.send(content=None, embed=embed)
+
+    # User needs to pick
     else:
         # Removes the hourglass
         await ctx.message.clear_reactions()
         
+        # Embed Creation
+        title = 'Results for {} (Showing {} of {})'.format(route_name, 10, len(routes))
+        color = 0xFFFFFF
+        
         # Slices the list since pagination is hard
         routes = routes[:10]
 
-        # Embed Creation
-        title = 'Results for {}'.format(route_name)
-        color = 0xFFFFFF
-
-        embed = discord.Embed(title=title, color=color)
+        embed = discord.Embed(title=title, color=color, timestamp=datetime.now().replace(microsecond=0))
 
         route_ids = ','.join([route['ID'] for route in routes])
         r = requests.get("https://www.mountainproject.com/data/get-routes?routeIds={}&key={}".format(route_ids, mp_key))
         mp_api_data = r.json()['routes']
 
+        # Creates the emoji list
+        emojis = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, len(routes))]
+        
         # We need to add in the MP data so that as soon as a route is selected, we can print the route data
-        route_text_list = ''
         for ind, route in enumerate(routes):
             route['image'] = mp_api_data[ind]['imgMedium']
             route['area'] = ' -> '.join(mp_api_data[ind]['location'])
             route['url'] = mp_api_data[ind]['url']
+            route['pitches'] = mp_api_data[ind]['pitches']
 
-            route_text_list += '{} - [{} ({})]({})\n'.format(ind, route['Name'], route['area'], route['url'])
+            route_text = '[{} ({})]({})\n'.format(route['Name'], route['area'], route['url'])
 
-        embed.add_field(name='Routes', value=route_text_list, inline=False)
+            embed.add_field(name='{}'.format(emojis[ind]), value=route_text, inline=False)
 
         # Set the implicit fields 
         embed.set_author(name=ctx.author)
@@ -136,7 +146,6 @@ async def route(ctx, route_name):
         embed_dict[embed.timestamp] = routes
 
         # Attaches the emojis
-        emojis = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, len(routes))]
         for emoji in emojis:
             await message.add_reaction(emoji)
 
@@ -187,19 +196,22 @@ async def on_reaction_add(reaction, user):
 
         if type(grades) is list:
             for grade in grades:
-                grade_string += ' `{}` |'.format(grade['Value'])
+                if grade['System'] in ALLOWED_SYSTEMS:
+                    grade_string += ' `{}` |'.format(grade['Value'])
         else:
             grade_string = '| `{}` | '.format(grades['Value'])
-        
+
+        # Pulls the route type information 
         route_type = route['Types']['RouteType']
         if type(route_type) is list:
             route_type_text = ', '.join(route_type)
         else:
             route_type_text = '| `{}` | '.format(route_type)
-
+        
         if type(route_type) is list:
             route_type = route_type[0]
 
+        # Changes the embed color based on route type
         if route_type == 'Boulder':
             color = 0x109618
         elif route_type == 'Sport':
@@ -210,15 +222,18 @@ async def on_reaction_add(reaction, user):
             color = 0xFF9900
         else:
             color = 0xFFFFFF
-        embed = discord.Embed(title=title, color=color, url=route['url'])
+
+        embed = discord.Embed(title=title, color=color, url=route['url'], timestamp=datetime.now().replace(microsecond=0))
         embed.clear_fields()
 
         embed.add_field(name='Area', value=route['area'], inline=False)
         embed.add_field(name='Grade', value=grade_string, inline=False)
         embed.add_field(name='Type', value=route_type_text, inline=False)
+        if(route['pitches']):
+            embed.add_field(name='Pitches', value=route['pitches'], inline=False)
         embed.add_field(name='Rating', value='{}/5'.format(rating), inline=False)
         embed.set_thumbnail(url=route['image'])
-        embed.set_footer(text='Type `?route <name>` to search for routes')
+        embed.set_footer(text='Type `?route "<name>"` to search for routes')
         
         await reaction.message.clear_reactions()
         await reaction.message.edit(embed=embed)
@@ -226,11 +241,10 @@ async def on_reaction_add(reaction, user):
         if(user.name+'#'+user.discriminator != bot_name):
             await reaction.remove(user)
 
-    route_data = embed_dict[embed.timestamp]
-
 # Error handling
 @bot.event
 async def on_command_error(ctx, error):
+    print(error)
     if isinstance(error, commands.DisabledCommand):
         await ctx.send(ctx.message.author, "I'm Sorry. This command is disabled and it can't be used.")
     elif isinstance(error, commands.CommandInvokeError):
