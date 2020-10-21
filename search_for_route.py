@@ -39,6 +39,4 @@ def search_for_routes(search_term):
         for area in data:
             output_list += traverse_routes(area, query_string)
 
-        # with open('search.json','w') as outfile:
-        #     json.dump(output_list, outfile)
         return output_list
