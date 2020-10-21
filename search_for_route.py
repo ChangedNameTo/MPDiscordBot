@@ -20,11 +20,11 @@ def traverse_routes(current_area, query_string):
         if(type(routes) is list):
             for route in routes:
                 if(route['NameForMatch'] is not None):
-                    if (route['NameForMatch'].find(query_string) != -1):
+                    if (route['NameForMatch'].lower().find(query_string.lower()) != -1):
                         return_list.append(route)
         else:
             if(routes['NameForMatch'] is not None):
-                if (routes['NameForMatch'].find(query_string) != -1):
+                if (routes['NameForMatch'].lower().find(query_string.lower()) != -1):
                     return_list.append(routes)
     
     return return_list
@@ -34,6 +34,7 @@ def search_for_routes(search_term):
     
     with open('routes.json') as json_file:
         data = json.load(json_file)
+        data = data['ArrayOfArea']['Area']
 
         output_list = []
         for area in data:
