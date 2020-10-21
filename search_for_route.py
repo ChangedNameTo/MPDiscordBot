@@ -31,13 +31,17 @@ def traverse_routes(current_area, query_string):
 
 def search_for_routes(search_term):
     query_string = ''.join( e for e in search_term if e.isalnum())
-    
-    with open('routes.json') as json_file:
-        data = json.load(json_file)
-        data = data['ArrayOfArea']['Area']
 
-        output_list = []
-        for area in data:
-            output_list += traverse_routes(area, query_string)
+    file_1 = open('1.json','r')
+    file_2 = open('2.json','r')
 
-        return output_list
+    set_1 = json.load(file_1)
+    set_2 = json.load(file_2)
+
+    combined_set = set_1 + set_2
+
+    output_list = []
+    for area in combined_set:
+        output_list += traverse_routes(area, query_string)
+
+    return output_list
