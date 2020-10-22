@@ -16,8 +16,9 @@ description = 'A bot for use in the Climbing discord'
 bot = commands.Bot(command_prefix='?', description=description)
 bot_name = 'MP Discord Bot#9416'
 
-mp_key = os.environ['mp_key']
-token = os.environ['token']
+from secrets import token, mp_key
+# mp_key = os.environ['mp_key']
+# token = os.environ['token']
 
 embed_dict = {}
 ALLOWED_SYSTEMS = ['Hueco', 'Fontainebleau', 'YDS', 'British', 'French']
@@ -41,10 +42,10 @@ async def route(ctx, route_name):
 
     if(found == 0):
         await ctx.send('Did not find any routes with that name.')
-        return 
+        return
     elif(found == 1):
         route = routes[0]
-        
+
         # Embed Creation
         title = '{}'.format(route['Name'])
 
@@ -68,7 +69,7 @@ async def route(ctx, route_name):
                     grade_string += ' `{}` |'.format(grade['Value'])
         else:
             grade_string = '| `{}`| '.format(grades['Value'])
-        
+
         route_type = route['Types']['RouteType']
         if type(route_type) is list:
             route_type_text = ', '.join(route_type)
@@ -110,11 +111,11 @@ async def route(ctx, route_name):
     else:
         # Removes the hourglass
         await ctx.message.clear_reactions()
-        
+
         # Embed Creation
         title = 'Results for {} (Showing {} of {})'.format(route_name, 10, len(routes))
         color = 0xFFFFFF
-        
+
         # Slices the list since pagination is hard
         routes = routes[:10]
 
@@ -126,7 +127,7 @@ async def route(ctx, route_name):
 
         # Creates the emoji list
         emojis = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, len(routes))]
-        
+
         # We need to add in the MP data so that as soon as a route is selected, we can print the route data
         for ind, route in enumerate(routes):
             route['image'] = mp_api_data[ind]['imgMedium']
@@ -138,14 +139,14 @@ async def route(ctx, route_name):
 
             embed.add_field(name='{}'.format(emojis[ind]), value=route_text, inline=False)
 
-        # Set the implicit fields 
+        # Set the implicit fields
         embed.set_author(name=ctx.author)
         embed.set_footer(text='Use the reactions to select the route. The developer sucks so this cuts off at 10 results.')
 
         # Sends the embed
         message = await ctx.send(content=None, embed=embed)
 
-        # Stores the timestamp so I can check against it later 
+        # Stores the timestamp so I can check against it later
         embed_dict[embed.timestamp] = routes
 
         # Attaches the emojis
@@ -163,7 +164,7 @@ async def on_reaction_add(reaction, user):
     # Is this an embed?
     if(len(reaction.message.embeds) == 0):
         return
-    
+
     # We only care if this embed is a route selection embed
     # These are all cached in the embed_dict
     embed = reaction.message.embeds[0]
@@ -175,7 +176,7 @@ async def on_reaction_add(reaction, user):
     # If this isn't one of the selection embeds, it should have exited by now
 
     routes = embed_dict[embed.timestamp]
-    
+
     reactants = [(i.name+'#'+i.discriminator) for i in await reaction.users().flatten()]
 
     if embed.author.name in reactants:
@@ -187,7 +188,7 @@ async def on_reaction_add(reaction, user):
             return
 
         route = routes[index]
-        
+
         # Embed Creation
         title = '{}'.format(route['Name'])
 
@@ -204,13 +205,13 @@ async def on_reaction_add(reaction, user):
         else:
             grade_string = '| `{}` | '.format(grades['Value'])
 
-        # Pulls the route type information 
+        # Pulls the route type information
         route_type = route['Types']['RouteType']
         if type(route_type) is list:
             route_type_text = ', '.join(route_type)
         else:
             route_type_text = '| `{}` | '.format(route_type)
-        
+
         if type(route_type) is list:
             route_type = route_type[0]
 
@@ -237,7 +238,7 @@ async def on_reaction_add(reaction, user):
         embed.add_field(name='Rating', value='{}/5'.format(rating), inline=False)
         embed.set_thumbnail(url=route['image'])
         embed.set_footer(text='Type `?route "<name>"` to search for routes')
-        
+
         await reaction.message.clear_reactions()
         await reaction.message.edit(embed=embed)
     else:
