@@ -11,6 +11,7 @@ from discord.ext import commands
 from excuses import excuses
 
 from search_for_route import search_for_routes
+from grades import convert_grades
 
 description = 'A bot for use in the Climbing discord'
 bot = commands.Bot(command_prefix='?', description=description)
@@ -157,6 +158,10 @@ async def route(ctx, route_name):
 @bot.command(description='Gives you an excuse', help='Punt easier than ever before')
 async def punt(ctx):
     await ctx.send(random.choice(excuses))
+
+@bot.command(description='Converts between two grading systems', help='Takes a system, then a grade in that system, and converts to the analogue.')
+async def grades(ctx, source, dest, grade):
+    new_grade = convert_grades(source, dest, grade)
 
 # Pagination for the embeds
 @bot.event
