@@ -100,7 +100,7 @@ async def route(ctx, route_name):
         embed.add_field(name='Type', value=route_type_text, inline=False)
         if(pitches):
             embed.add_field(name='Pitches', value=pitches, inline=False)
-        embed.add_field(name='Rating', value='{}/5'.format(rating), inline=False)
+        embed.add_field(name='Rating', value='{}/4'.format(rating), inline=False)
         embed.set_author(name=ctx.author)
         embed.set_thumbnail(url=thumbnail)
         embed.set_footer(text='Type `?route "<name>"` to search for routes')
@@ -180,7 +180,8 @@ async def on_reaction_add(reaction, user):
     reactants = [(i.name+'#'+i.discriminator) for i in await reaction.users().flatten()]
 
     if embed.author.name in reactants:
-        index = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, len(routes))].index(reaction.emoji)
+        emoji_list = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, len(routes))]
+        index = emoji_list.index(reaction.emoji) if reaction.emoji in emoji_list else -1
 
         # Did they add a valid reaction?
         if index == -1:
@@ -235,7 +236,7 @@ async def on_reaction_add(reaction, user):
         embed.add_field(name='Type', value=route_type_text, inline=False)
         if(route['pitches']):
             embed.add_field(name='Pitches', value=route['pitches'], inline=False)
-        embed.add_field(name='Rating', value='{}/5'.format(rating), inline=False)
+        embed.add_field(name='Rating', value='{}/4'.format(rating), inline=False)
         embed.set_thumbnail(url=route['image'])
         embed.set_footer(text='Type `?route "<name>"` to search for routes')
 
@@ -256,11 +257,14 @@ async def on_command_error(ctx, error):
         traceback.print_tb(error.original.__traceback__)
         print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.send(ctx.message.channel, "It seems you are trying to use a command that does not exist.")
+    #     await ctx.send("It seems you are trying to use a command that does not exist.")
+        return
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("It seems you are missing required argument(s). Try again if you have all the arguments needed.")
     elif isinstance(error, KeyError):
         await ctx.send("This is a KeyError cause @TheAlpacalypse#8105 is an idiot.")
+    elif isinstance(error, TypeError):
+        await ctx.send("This is a TypeError cause @TheAlpacalypse#8105 is an idiot.")
 
 # Run the bot
 bot.run(token)
