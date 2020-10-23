@@ -11,7 +11,7 @@ from discord.ext import commands
 from excuses import excuses
 
 from search_for_route import search_for_routes
-from grades import convert_grades
+from grades import convert_grade
 
 description = 'A bot for use in the Climbing discord'
 bot = commands.Bot(command_prefix='?', description=description)
@@ -161,7 +161,19 @@ async def punt(ctx):
 
 @bot.command(description='Converts between two grading systems', help='Takes a system, then a grade in that system, and converts to the analogue.')
 async def grades(ctx, source, dest, grade):
-    new_grade = convert_grades(source, dest, grade)
+    new_grade = convert_grade(source.lower(), dest.lower(), grade)
+
+    embed = discord.Embed(title='Grade Conversion')
+    embed.add_field(name='Source', value=source, inline=True)
+    embed.add_field(name='Source Grade', value=grade, inline=True)
+    embed.add_field(name='\u200B', value='\u200B', inline=True)
+    embed.add_field(name='Dest', value=dest, inline=True)
+    embed.add_field(name='Dest Grade', value=new_grade, inline=True)
+    embed.add_field(name='\u200B', value='\u200B', inline=True)
+        
+    embed.set_author(name=ctx.author)
+    embed.set_footer(text='Type `?grades <source scale> <dest scale> <source grade>` to convert grades')
+    await ctx.send(content=None, embed=embed)
 
 # Pagination for the embeds
 @bot.event
